@@ -94,6 +94,14 @@ a {
     transform: scaleX(1);
 }
 
+.nav-links__item--active {
+    color: color.mix($primary, $accent, 60%);
+}
+
+.nav-links__item--active::after {
+    transform: scaleX(1);
+}
+
 .section-edge {
     position: relative;
 }

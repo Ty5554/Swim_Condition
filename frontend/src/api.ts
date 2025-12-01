@@ -1,35 +1,27 @@
-// api.ts
-// API 型定義と関数（仮実装）
+import axios from "axios";
 
 export type Condition = {
     id: number;
-    name: string;
-    fatigue: number;
-    achievement: number;
-    heartRate: number;
+    athlete_name: string;
+    physical_fatigue: number;
+    mental_fatigue: number;
+    training_completion: number;
+    heart_rate: number;
     diary: string;
     date: string;
 };
 
-// ダミーデータ
-const dummyConditions: Condition[] = [
-    {
-        id: 1,
-        name: "山田太郎",
-        fatigue: 3,
-        achievement: 80,
-        heartRate: 120,
-        diary: "今日は良い練習ができた。",
-        date: "2025-11-15",
-    },
-];
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api";
+
+const apiClient = axios.create({
+    baseURL: apiBaseUrl,
+});
 
 export async function fetchConditions(): Promise<Condition[]> {
-    // 本来はAPIリクエスト
-    return Promise.resolve(dummyConditions);
+    const res = await apiClient.get<Condition[]>("/conditions/");
+    return res.data;
 }
 
 export async function createCondition(data: Omit<Condition, "id" | "date">): Promise<void> {
-    // 本来はAPIリクエスト
-    return Promise.resolve();
+    await apiClient.post("/conditions/", data);
 }
