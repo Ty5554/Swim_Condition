@@ -33,11 +33,13 @@ const App: React.FC = () => {
     };
 
     return (
-        <>
+        <div className="app-shell">
             <CssBaseline />
             <Header />
             {/* ヒーローセクション（トップの大きなエリア） */}
             <Box
+                id="hero"
+                className="hero section-edge"
                 sx={{
                     position: "relative",
                     overflow: "hidden",
@@ -99,13 +101,11 @@ const App: React.FC = () => {
                         <Grid item xs={12} md={5}>
                             {/* イメージ用カード（波っぽいグラフをイメージしたダミー） */}
                             <Paper
+                                className="glass-card"
                                 elevation={6}
                                 sx={{
                                     p: 3,
                                     borderRadius: 4,
-                                    bgcolor: "rgba(255,255,255,0.1)",
-                                    border: "1px solid rgba(255,255,255,0.3)",
-                                    backdropFilter: "blur(6px)",
                                 }}
                             >
                                 <Typography variant="subtitle2" sx={{ mb: 1, opacity: 0.9 }}>
@@ -153,7 +153,7 @@ const App: React.FC = () => {
             </Box>
 
             {/* メリット/特徴セクション */}
-            <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
+            <Container maxWidth="md" className="section-edge" sx={{ mt: 6, mb: 4 }}>
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={4}>
                         <Paper sx={{ p: 3, borderRadius: 3, height: "100%" }} elevation={2}>
@@ -195,7 +195,7 @@ const App: React.FC = () => {
             </Container>
 
             {/* コンディション入力セクション */}
-            <Box id="condition-input" sx={{ bgcolor: "#f5f7fb", py: 6 }}>
+            <Box id="condition-input" className="scroll-anchor section-edge" sx={{ bgcolor: "#f5f7fb", py: 6 }}>
                 <Container maxWidth="md">
                     <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
                         今日のコンディションを記録する
@@ -211,7 +211,12 @@ const App: React.FC = () => {
 
 
             {/* 一覧セクション */}
-            <Container maxWidth="md" sx={{ mt: 6, mb: 8 }}>
+            <Container
+                id="condition-history"
+                maxWidth="md"
+                className="scroll-anchor section-edge"
+                sx={{ mt: 6, mb: 8 }}
+            >
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                     コンディション履歴一覧
                 </Typography>
@@ -224,7 +229,7 @@ const App: React.FC = () => {
             </Container>
             
             <Footer />
-        </>
+        </div>
     );
 };
 

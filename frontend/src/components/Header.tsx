@@ -9,10 +9,31 @@ export const Header: React.FC = () => {
                     Swim Condition
                 </Typography>
 
-                <Box sx={{ display: "flex", gap: 2 }}>
-                    <Typography variant="body1">選手一覧</Typography>
-                    <Typography variant="body1">入力フォーム</Typography>
-                    <Typography variant="body1">設定</Typography>
+                <Box component="nav" className="nav-links">
+                    <Typography
+                        component="a"
+                        href="#hero"
+                        variant="body1"
+                        className="nav-links__item"
+                    >
+                        トップ
+                    </Typography>
+                    <Typography
+                        component="a"
+                        href="#condition-input"
+                        variant="body1"
+                        className="nav-links__item"
+                    >
+                        入力フォーム
+                    </Typography>
+                    <Typography
+                        component="a"
+                        href="#condition-history"
+                        variant="body1"
+                        className="nav-links__item"
+                    >
+                        履歴一覧
+                    </Typography>
                 </Box>
             </Toolbar>
         </AppBar>
