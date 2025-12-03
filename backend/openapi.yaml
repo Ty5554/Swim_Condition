@@ -1,0 +1,2025 @@
+openapi: 3.0.3
+info:
+  title: Swim Condition API
+  version: "1.0.0"
+  description: |
+    swim-condition-app/api_sheet.csv を基にしたAPI設計書。日付は "YYYY-MM-DD"、日時は ISO8601 UTC "YYYY-MM-DDThh:mm:ssZ" を利用する。
+servers:
+  - url: http://localhost:8000
+    description: Local development
+tags:
+  - name: Users
+    description: ユーザー管理
+  - name: Teams
+    description: チーム管理
+  - name: TeamInvitations
+    description: チーム招待
+  - name: Roles
+    description: ロール付与
+  - name: SNSCredentials
+    description: 外部認証情報
+  - name: Conditions
+    description: 体調記録
+  - name: SelfRecords
+    description: 自己ベスト記録
+  - name: Diaries
+    description: 日誌
+  - name: Bodies
+    description: 体組成
+  - name: TrainingMenus
+    description: トレーニングメニュー
+  - name: TrainingSets
+    description: セット構成
+  - name: HeartRates
+    description: 心拍データ
+paths:
+  /api/users:
+    get:
+      tags: [Users]
+      summary: User list
+      description: Adminのみ。page/per_pageでページネーション。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [Users]
+      summary: Create user
+      description: 認証不要で新規登録。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/users/{id}:
+    get:
+      tags: [Users]
+      summary: User detail
+      description: 本人またはAdminのみ取得可能。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [Users]
+      summary: Update user
+      description: 本人のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Users]
+      summary: Delete user
+      description: 本人またはAdmin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/teams:
+    get:
+      tags: [Teams]
+      summary: Team list
+      description: ログインユーザーが所属するチームのみ取得。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [Teams]
+      summary: Create team
+      description: 認証済みユーザーがチームを作成。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/teams/{id}:
+    get:
+      tags: [Teams]
+      summary: Team detail
+      description: 当該チーム所属ユーザーのみ取得可能。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [Teams]
+      summary: Update team
+      description: Team管理者のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Teams]
+      summary: Delete team
+      description: Adminのみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/team_invitations:
+    get:
+      tags: [TeamInvitations]
+      summary: Invitation list
+      description: 本人またはTeam管理者。user_id, team_idでフィルタ可能。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/TeamIdQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamInvitation'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [TeamInvitations]
+      summary: Create invitation
+      description: Team管理者のみ。pending重複時は409。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamInvitationCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInvitation'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/team_invitations/{id}:
+    get:
+      tags: [TeamInvitations]
+      summary: Invitation detail
+      description: 対象ユーザーまたはTeam管理者。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInvitation'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [TeamInvitations]
+      summary: Update invitation
+      description: 対象ユーザーまたはTeam管理者。status更新専用。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamInvitationUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInvitation'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [TeamInvitations]
+      summary: Delete invitation
+      description: Team管理者のみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/roles:
+    get:
+      tags: [Roles]
+      summary: Role list
+      description: Adminのみ。user_idでフィルタ可能。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [Roles]
+      summary: Create role
+      description: Adminのみ。user_id + role 重複時は409。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/roles/{id}:
+    patch:
+      tags: [Roles]
+      summary: Update role
+      description: Adminのみ。ロール名変更。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Roles]
+      summary: Delete role
+      description: Adminのみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/users/{user_id}/roles:
+    get:
+      tags: [Roles]
+      summary: User role list
+      description: 本人またはAdmin。ページネーション対応。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/users/{user_id}/sns_credentials:
+    get:
+      tags: [SNSCredentials]
+      summary: SNS list
+      description: 本人またはAdmin。トークンはレスポンスに含めない。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SNSCredential'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [SNSCredentials]
+      summary: Create SNS
+      description: 本人のみ。provider + uid 重複時は409。トークンは保存のみ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SNSCredentialCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SNSCredential'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/sns_credentials/{id}:
+    get:
+      tags: [SNSCredentials]
+      summary: SNS detail
+      description: 本人またはAdmin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SNSCredential'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [SNSCredentials]
+      summary: Update SNS
+      description: 本人のみ。トークン更新専用。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SNSCredentialUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SNSCredential'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [SNSCredentials]
+      summary: Delete SNS
+      description: 本人またはAdmin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/conditions:
+    get:
+      tags: [Conditions]
+      summary: Condition list
+      description: 本人またはCoach/Admin。user_id, from, toでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Condition'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [Conditions]
+      summary: Create condition
+      description: 本人のみ。user_id + recorded_on 重複ポリシーは別途定義。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConditionCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/conditions/{id}:
+    get:
+      tags: [Conditions]
+      summary: Condition detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [Conditions]
+      summary: Update condition
+      description: 本人のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConditionUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Conditions]
+      summary: Delete condition
+      description: 本人またはCoach/Admin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/self_records:
+    get:
+      tags: [SelfRecords]
+      summary: Record list
+      description: 本人またはCoach/Admin。user_id, style, distanceでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/StyleQuery'
+        - $ref: '#/components/parameters/DistanceQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SelfRecord'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [SelfRecords]
+      summary: Create record
+      description: 本人のみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfRecordCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfRecord'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/self_records/{id}:
+    get:
+      tags: [SelfRecords]
+      summary: Record detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfRecord'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [SelfRecords]
+      summary: Update record
+      description: 本人のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfRecordUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfRecord'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [SelfRecords]
+      summary: Delete record
+      description: 本人またはCoach/Admin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/diaries:
+    get:
+      tags: [Diaries]
+      summary: Diary list
+      description: 本人またはCoach/Admin。user_id, from, toでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Diary'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Diaries]
+      summary: Create diary
+      description: 本人のみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiaryCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diary'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/diaries/{id}:
+    get:
+      tags: [Diaries]
+      summary: Diary detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diary'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Diaries]
+      summary: Update diary
+      description: 本人のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiaryUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diary'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Diaries]
+      summary: Delete diary
+      description: 本人またはCoach/Admin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/bodies:
+    get:
+      tags: [Bodies]
+      summary: Body list
+      description: 本人またはCoach/Admin。user_id, from, toでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Body'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [Bodies]
+      summary: Create body
+      description: 本人のみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Body'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/bodies/{id}:
+    get:
+      tags: [Bodies]
+      summary: Body detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Body'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [Bodies]
+      summary: Update body
+      description: 本人のみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Body'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Bodies]
+      summary: Delete body
+      description: 本人またはCoach/Admin。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/training_menus:
+    get:
+      tags: [TrainingMenus]
+      summary: Menu list
+      description: 本人またはCoach/Admin。user_id, training_dateでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/TrainingDateQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrainingMenu'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [TrainingMenus]
+      summary: Create menu
+      description: Coach/Adminのみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingMenuCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingMenu'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/training_menus/{id}:
+    get:
+      tags: [TrainingMenus]
+      summary: Menu detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingMenu'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [TrainingMenus]
+      summary: Update menu
+      description: Coach/Adminのみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingMenuUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingMenu'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [TrainingMenus]
+      summary: Delete menu
+      description: Coach/Adminのみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/training_sets:
+    get:
+      tags: [TrainingSets]
+      summary: Set list
+      description: 本人またはCoach/Admin。training_menu_idやuser_idでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TrainingMenuIdQuery'
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrainingSet'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [TrainingSets]
+      summary: Create set
+      description: Coach/Adminのみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingSetCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSet'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/training_sets/{id}:
+    get:
+      tags: [TrainingSets]
+      summary: Set detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSet'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [TrainingSets]
+      summary: Update set
+      description: Coach/Adminのみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingSetUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSet'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [TrainingSets]
+      summary: Delete set
+      description: Coach/Adminのみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/heart_rates:
+    get:
+      tags: [HeartRates]
+      summary: HeartRate list
+      description: 本人またはCoach/Admin。training_set_idやuser_idでフィルタ。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TrainingSetIdQuery'
+        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HeartRate'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [HeartRates]
+      summary: Create HeartRate
+      description: Coach/Adminのみ。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartRateCreate'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartRate'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/heart_rates/{id}:
+    get:
+      tags: [HeartRates]
+      summary: HeartRate detail
+      description: 本人またはCoach/Admin。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartRate'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    patch:
+      tags: [HeartRates]
+      summary: Update HeartRate
+      description: Coach/Adminのみ。部分更新。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartRateUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartRate'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [HeartRates]
+      summary: Delete HeartRate
+      description: Coach/Adminのみ。論理削除。
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: 削除成功
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 1始まりのページ番号（デフォルト1）
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: 1ページ件数（デフォルト20、最大100）
+    UserIdQuery:
+      name: user_id
+      in: query
+      schema:
+        type: integer
+      description: ユーザーIDでフィルタ
+    TeamIdQuery:
+      name: team_id
+      in: query
+      schema:
+        type: integer
+      description: チームIDでフィルタ
+    TrainingMenuIdQuery:
+      name: training_menu_id
+      in: query
+      schema:
+        type: integer
+      description: トレーニングメニューIDでフィルタ
+    TrainingSetIdQuery:
+      name: training_set_id
+      in: query
+      schema:
+        type: integer
+      description: トレーニングセットIDでフィルタ
+    TrainingDateQuery:
+      name: training_date
+      in: query
+      schema:
+        type: string
+        format: date
+      description: トレーニング日(YYYY-MM-DD)
+    FromDate:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date
+      description: フィルタ開始日(YYYY-MM-DD)
+    ToDate:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date
+      description: フィルタ終了日(YYYY-MM-DD)
+    StyleQuery:
+      name: style
+      in: query
+      schema:
+        type: integer
+      description: 泳法など種目スタイル
+    DistanceQuery:
+      name: distance
+      in: query
+      schema:
+        type: integer
+      description: 距離フィルタ
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: リソースID
+    UserIdPath:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: ユーザーID
+  responses:
+    BadRequest:
+      description: 400 Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: 401 Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: 403 Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: 409 Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServerError:
+      description: 500 Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 例) validation_error, unauthorized, conflict
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+      required: [code, message]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+      required: [error]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, email, first_name, last_name, created_at, updated_at]
+    UserCreate:
+      type: object
+      required: [email, first_name, last_name, password]
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+          minLength: 8
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+          minLength: 8
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        team_name:
+          type: string
+        invitation_token:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, team_name, invitation_token, created_at, updated_at]
+    TeamCreate:
+      type: object
+      required: [team_name]
+      properties:
+        team_name:
+          type: string
+    TeamUpdate:
+      type: object
+      properties:
+        team_name:
+          type: string
+    TeamInvitation:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        team_id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, team_id, status, created_at, updated_at]
+    TeamInvitationCreate:
+      type: object
+      required: [user_id, team_id]
+      properties:
+        user_id:
+          type: integer
+        team_id:
+          type: integer
+    TeamInvitationUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        role:
+          type: string
+          description: 例) athlete, coach, admin
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, role, created_at, updated_at]
+    RoleCreate:
+      type: object
+      required: [user_id, role]
+      properties:
+        user_id:
+          type: integer
+        role:
+          type: string
+    RoleUpdate:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+    SNSCredential:
+      type: object
+      properties:
+        id:
+          type: integer
+        provider:
+          type: string
+          description: 例) google
+        uid:
+          type: string
+        user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, provider, uid, user_id, created_at, updated_at]
+    SNSCredentialCreate:
+      type: object
+      required: [provider, uid, google_access_token]
+      properties:
+        provider:
+          type: string
+        uid:
+          type: string
+        google_access_token:
+          type: string
+        google_refresh_token:
+          type: string
+    SNSCredentialUpdate:
+      type: object
+      properties:
+        google_access_token:
+          type: string
+        google_refresh_token:
+          type: string
+    Condition:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        fatigue_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+        body_temperature:
+          type: number
+          format: float
+        sleep_hours:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 24
+        mental_state:
+          type: integer
+          minimum: 0
+          maximum: 10
+        recorded_on:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - fatigue_level
+        - body_temperature
+        - sleep_hours
+        - mental_state
+        - recorded_on
+        - created_at
+        - updated_at
+    ConditionCreate:
+      type: object
+      required:
+        - user_id
+        - fatigue_level
+        - body_temperature
+        - sleep_hours
+        - mental_state
+        - recorded_on
+      properties:
+        user_id:
+          type: integer
+        fatigue_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+        body_temperature:
+          type: number
+          format: float
+        sleep_hours:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 24
+        mental_state:
+          type: integer
+          minimum: 0
+          maximum: 10
+        recorded_on:
+          type: string
+          format: date
+    ConditionUpdate:
+      type: object
+      properties:
+        fatigue_level:
+          type: integer
+          minimum: 0
+          maximum: 10
+        body_temperature:
+          type: number
+          format: float
+        sleep_hours:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 24
+        mental_state:
+          type: integer
+          minimum: 0
+          maximum: 10
+        recorded_on:
+          type: string
+          format: date
+    SelfRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        style:
+          type: integer
+        distance:
+          type: integer
+        record:
+          type: integer
+          description: 記録（100分の1秒などの内部表現）
+        recorded_on:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, style, distance, record, recorded_on, created_at, updated_at]
+    SelfRecordCreate:
+      type: object
+      required: [user_id, style, distance, record, recorded_on]
+      properties:
+        user_id:
+          type: integer
+        style:
+          type: integer
+        distance:
+          type: integer
+        record:
+          type: integer
+        recorded_on:
+          type: string
+          format: date
+    SelfRecordUpdate:
+      type: object
+      properties:
+        style:
+          type: integer
+        distance:
+          type: integer
+        record:
+          type: integer
+        recorded_on:
+          type: string
+          format: date
+    Diary:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        content:
+          type: string
+        feedback:
+          type: string
+        recorded_on:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, content, recorded_on, created_at, updated_at]
+    DiaryCreate:
+      type: object
+      required: [user_id, content, recorded_on]
+      properties:
+        user_id:
+          type: integer
+        content:
+          type: string
+        recorded_on:
+          type: string
+          format: date
+        feedback:
+          type: string
+    DiaryUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+        recorded_on:
+          type: string
+          format: date
+        feedback:
+          type: string
+    Body:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        height:
+          type: number
+          format: float
+        weight:
+          type: number
+          format: float
+        body_fat:
+          type: number
+          format: float
+        recorded_on:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, height, weight, body_fat, recorded_on, created_at, updated_at]
+    BodyCreate:
+      type: object
+      required: [user_id, height, weight, body_fat, recorded_on]
+      properties:
+        user_id:
+          type: integer
+        height:
+          type: number
+          format: float
+        weight:
+          type: number
+          format: float
+        body_fat:
+          type: number
+          format: float
+        recorded_on:
+          type: string
+          format: date
+    BodyUpdate:
+      type: object
+      properties:
+        height:
+          type: number
+          format: float
+        weight:
+          type: number
+          format: float
+        body_fat:
+          type: number
+          format: float
+        recorded_on:
+          type: string
+          format: date
+    TrainingMenu:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        training_date:
+          type: string
+          format: date
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, training_date, created_at, updated_at]
+    TrainingMenuCreate:
+      type: object
+      required: [user_id, training_date]
+      properties:
+        user_id:
+          type: integer
+        training_date:
+          type: string
+          format: date
+        description:
+          type: string
+    TrainingMenuUpdate:
+      type: object
+      properties:
+        training_date:
+          type: string
+          format: date
+        description:
+          type: string
+    TrainingSet:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        training_menu_id:
+          type: integer
+        set_number:
+          type: integer
+        intensity:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, training_menu_id, set_number, intensity, created_at, updated_at]
+    TrainingSetCreate:
+      type: object
+      required: [user_id, training_menu_id, set_number, intensity]
+      properties:
+        user_id:
+          type: integer
+        training_menu_id:
+          type: integer
+        set_number:
+          type: integer
+        intensity:
+          type: string
+    TrainingSetUpdate:
+      type: object
+      properties:
+        set_number:
+          type: integer
+        intensity:
+          type: string
+    HeartRate:
+      type: object
+      properties:
+        id:
+          type: integer
+        training_set_id:
+          type: integer
+        user_id:
+          type: integer
+        training_heart_rate:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, training_set_id, user_id, training_heart_rate, created_at, updated_at]
+    HeartRateCreate:
+      type: object
+      required: [user_id, training_set_id, training_heart_rate]
+      properties:
+        user_id:
+          type: integer
+        training_set_id:
+          type: integer
+        training_heart_rate:
+          type: integer
+    HeartRateUpdate:
+      type: object
+      properties:
+        training_heart_rate:
+          type: integer
