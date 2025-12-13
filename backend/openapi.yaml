@@ -9,7 +9,7 @@ servers:
     description: Local development
 tags:
   - name: Auth
-    description: "JWT認証（方針: refreshローテーションなし / サーバー失効管理なし）"
+    description: "JWT認証（方針: refreshローテーションなし / サーバー失効管理なし、access=15分、refresh=30日）"
   - name: Users
     description: ユーザー管理
   - name: Teams
@@ -2135,7 +2135,7 @@ components:
         expires_in:
           type: integer
           description: access_token の有効期限（秒）
-          example: 3600
+          example: 900
     AuthTokenRefreshResponse:
       type: object
       required: [access_token, token_type, expires_in]
@@ -2149,4 +2149,4 @@ components:
         expires_in:
           type: integer
           description: access_token の有効期限（秒）
-          example: 3600
+          example: 900
