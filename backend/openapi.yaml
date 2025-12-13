@@ -9,7 +9,7 @@ servers:
     description: Local development
 tags:
   - name: Auth
-    description: JWT認証（ログイン/更新/ログアウト）
+    description: "JWT認証（方針: refreshローテーションなし / サーバー失効管理なし）"
   - name: Users
     description: ユーザー管理
   - name: Teams
@@ -63,7 +63,7 @@ paths:
     post:
       tags: [Auth]
       summary: Refresh access token
-      description: refresh_token を用いて access_token を再発行する（必要に応じて refresh_token もローテーション）。
+      description: refresh_token を用いて access_token を再発行する（refresh_token はローテーションしない）。
       security: []
       requestBody:
         required: true
@@ -84,15 +84,11 @@ paths:
   /api/auth/logout:
     post:
       tags: [Auth]
-      summary: Logout (revoke refresh token)
-      description: refresh_token を無効化する（サーバー側でブラックリスト/失効管理を行う前提）。
+      summary: Logout (client-side)
+      description: |
+        方針としてサーバー側の失効管理を行わないため、トークンの無効化はしない。
+        クライアント側で access_token / refresh_token を破棄するための呼び出し（no-op）として 204 を返す。
       security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthLogoutRequest'
       responses:
         '204':
           description: ログアウト成功
@@ -2123,13 +2119,6 @@ components:
         refresh_token:
           type: string
           description: リフレッシュトークン
-    AuthLogoutRequest:
-      type: object
-      required: [refresh_token]
-      properties:
-        refresh_token:
-          type: string
-          description: 無効化対象のリフレッシュトークン
     AuthTokenPair:
       type: object
       required: [access_token, refresh_token, token_type, expires_in]
@@ -2154,10 +2143,6 @@ components:
         access_token:
           type: string
           description: アクセストークン（JWT）
-        refresh_token:
-          type: string
-          nullable: true
-          description: ローテーション時に返却（返さない場合は null/省略）
         token_type:
           type: string
           example: Bearer
