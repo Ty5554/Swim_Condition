@@ -7,6 +7,7 @@ from drf_spectacular.views import (
 )
 from condition.views import ConditionViewSet
 from config.views import openapi_yaml_view
+from config.auth_views import AuthLoginView, AuthLogoutView, AuthMeView, AuthRefreshView
 
 router = DefaultRouter()
 router.register(r"conditions", ConditionViewSet, basename="condition")
@@ -30,6 +31,12 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema-yaml"),
         name="redoc",
     ),
+
+    # Auth
+    path("api/auth/login", AuthLoginView.as_view(), name="auth-login"),
+    path("api/auth/refresh", AuthRefreshView.as_view(), name="auth-refresh"),
+    path("api/auth/logout", AuthLogoutView.as_view(), name="auth-logout"),
+    path("api/auth/me", AuthMeView.as_view(), name="auth-me"),
 
     # 既存 API
     path("api/", include(router.urls)),

@@ -8,6 +8,8 @@ servers:
   - url: http://localhost:8000
     description: Local development
 tags:
+  - name: Auth
+    description: "JWT認証（方針: refreshローテーションなし / サーバー失効管理なし、access=15分、refresh=30日）"
   - name: Users
     description: ユーザー管理
   - name: Teams
@@ -33,6 +35,82 @@ tags:
   - name: HeartRates
     description: 心拍データ
 paths:
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (issue JWT)
+      description: |
+        email/passwordで認証し、access_token/refresh_token を発行する。
+        access_token は Authorization: Bearer <token> で利用する。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: 認証成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenPair'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      description: refresh_token を用いて access_token を再発行する（refresh_token はローテーションしない）。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRefreshRequest'
+      responses:
+        '200':
+          description: 再発行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenRefreshResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (client-side)
+      description: |
+        方針としてサーバー側の失効管理を行わないため、トークンの無効化はしない。
+        クライアント側で access_token / refresh_token を破棄するための呼び出し（no-op）として 204 を返す。
+      security: []
+      responses:
+        '204':
+          description: ログアウト成功
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user
+      description: アクセストークンから本人情報を返す。
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/ServerError' }
   /api/users:
     get:
       tags: [Users]
@@ -2023,3 +2101,52 @@ components:
       properties:
         training_heart_rate:
           type: integer
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+    AuthRefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          description: リフレッシュトークン
+    AuthTokenPair:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: アクセストークン（JWT）
+        refresh_token:
+          type: string
+          description: リフレッシュトークン（JWTまたは不透明トークン）
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          description: access_token の有効期限（秒）
+          example: 900
+    AuthTokenRefreshResponse:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: アクセストークン（JWT）
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          description: access_token の有効期限（秒）
+          example: 900
