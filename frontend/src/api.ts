@@ -1,3 +1,7 @@
+// フロントエンドからバックエンド API（Django/DRF）を呼び出すための薄いラッパーです。
+// - Condition 型: API レスポンスの形
+// - fetchConditions: 一覧取得
+// - createCondition: 新規作成
 import axios from "axios";
 
 export type Condition = {
@@ -11,17 +15,21 @@ export type Condition = {
     date: string;
 };
 
+// Vite の環境変数（VITE_ から始まるもの）で API のベース URL を切り替えられます。
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api";
 
+// axios のインスタンスを作って baseURL を共通化します。
 const apiClient = axios.create({
     baseURL: apiBaseUrl,
 });
 
 export async function fetchConditions(): Promise<Condition[]> {
+    // GET /conditions/ -> Condition[] を取得
     const res = await apiClient.get<Condition[]>("/conditions/");
     return res.data;
 }
 
 export async function createCondition(data: Omit<Condition, "id" | "date">): Promise<void> {
+    // POST /conditions/ -> 新しい Condition を作成（この実装ではレスポンスは使わない）
     await apiClient.post("/conditions/", data);
 }

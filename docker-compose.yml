@@ -1,11 +1,16 @@
 version: "3.9"
 
+# ローカル開発用の構成です。
+# - backend: Django/DRF API（8000）
+# - frontend: Vite + React（5173）
 services:
   backend:
     build: ./backend
     container_name: swim-backend
+    # 開発サーバーを 0.0.0.0 で listen し、ホストからアクセスできるようにします。
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
+      # ソースをマウントしてホットリロードしやすくします。
       - ./backend:/app
     ports:
       - "8000:8000"
@@ -13,11 +18,14 @@ services:
   frontend:
     build: ./frontend
     container_name: swim-frontend
+    # Vite をホスト公開し、別コンテナ/ホストからアクセスできるようにします。
     command: npm run dev -- --host 0.0.0.0 --port 5173
     volumes:
       - ./frontend:/app
+      # node_modules をコンテナ側に保持し、ホストの影響を受けにくくします。
       - /app/node_modules
     environment:
+      # フロントから叩く API のベース URL（Docker ネットワーク内の backend を参照）
       - VITE_API_BASE_URL=http://backend:8000/api
     ports:
       - "5173:5173"

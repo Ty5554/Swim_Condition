@@ -1,3 +1,5 @@
+// 画面上部のナビゲーション（ヘッダー）です。
+// a タグのクリックを preventDefault して、親から渡されたコールバックで SPA 内遷移を実現しています。
 import React from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
 
@@ -14,9 +16,11 @@ export const Header: React.FC<Props> = ({
     onNavigateHistory,
     currentPath,
 }) => {
+    // 現在のパスに応じて「アクティブ表示」を切り替えます。
     const isHome = currentPath === "/";
     const isHistory = currentPath === "/history";
 
+    // MUI の Typography をリンクとして使うため、クリック時に通常遷移を止めてコールバックを呼びます。
     const handleClick =
         (callback: () => void) =>
         (event: React.MouseEvent<HTMLAnchorElement>) => {

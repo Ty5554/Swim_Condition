@@ -1,3 +1,5 @@
+// コンディションを新規作成する入力フォームです。
+// 親から渡された onSubmit を呼び出し、成功したら一部入力をリセットします。
 import React, { useState } from "react";
 import {
     Box,
@@ -15,6 +17,7 @@ type Props = {
 };
 
 export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
+    // 各入力項目をローカル state で保持します（フォームの制御コンポーネント）。
     const [athleteName, setAthleteName] = useState("");
     const [physicalFatigue, setPhysicalFatigue] = useState(5);
     const [mentalFatigue, setMentalFatigue] = useState(5);
@@ -24,9 +27,11 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
+        // ブラウザの通常送信（ページ遷移）を止め、SPA として API 呼び出しに置き換えます。
         e.preventDefault();
         setSubmitting(true);
         try {
+            // API に渡す形に整形して親へ渡します（id/date はサーバー側で付与）。
             await onSubmit({
                 athlete_name: athleteName,
                 physical_fatigue: physicalFatigue,
@@ -35,6 +40,7 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
                 heart_rate: heartRate,
                 diary,
             });
+            // 入力後に日誌欄だけクリア（他の項目は連続入力しやすいよう残す設計）。
             setDiary("");
         } finally {
             setSubmitting(false);
@@ -55,6 +61,7 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
                         required
                     />
 
+                    {/* Slider は 0〜10 の整数値を入力する UI */}
                     <Typography variant="subtitle2">身体疲労度 (0-10)</Typography>
                     <Slider
                         value={physicalFatigue}
@@ -73,6 +80,7 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
                         max={10}
                     />
 
+                    {/* 数値入力は TextField(type=number) で扱い、onChange で number に変換します */}
                     <TextField
                         label="トレーニング達成率 (%)"
                         type="number"
@@ -90,6 +98,7 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
                         required
                     />
 
+                    {/* 練習日誌は複数行入力 */}
                     <TextField
                         label="今日の練習日誌"
                         value={diary}
@@ -102,6 +111,7 @@ export const ConditionForm: React.FC<Props> = ({ onSubmit }) => {
                         <Button
                             variant="contained"
                             type="submit"
+                            // 送信中は二重送信を避け、選手名が空なら必須として送信不可にします。
                             disabled={submitting || !athleteName}
                         >
                             保存する

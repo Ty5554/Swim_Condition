@@ -1,3 +1,5 @@
+// Condition の一覧を表形式で表示するコンポーネントです。
+// diary（練習日誌）はテーブル内で長くなりやすいので、表示を短縮しています。
 import React from "react";
 import {
     Table,
@@ -36,6 +38,7 @@ export const ConditionTable: React.FC<Props> = ({ conditions }) => {
                             <TableCell>{row.date}</TableCell>
                             <TableCell>{row.athlete_name}</TableCell>
                             <TableCell>
+                                {/* 疲労度は Chip で視認性を上げます */}
                                 <Chip label={row.physical_fatigue} size="small" />
                             </TableCell>
                             <TableCell>
@@ -43,6 +46,7 @@ export const ConditionTable: React.FC<Props> = ({ conditions }) => {
                             </TableCell>
                             <TableCell>{row.training_completion}%</TableCell>
                             <TableCell>{row.heart_rate}</TableCell>
+                            {/* 40文字まで表示し、全文は title 属性でホバー表示 */}
                             <TableCell sx={{ maxWidth: 240 }} title={row.diary}>
                                 {row.diary.slice(0, 40)}
                                 {row.diary.length > 40 ? "..." : ""}

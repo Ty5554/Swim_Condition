@@ -1,3 +1,7 @@
+# 認証系のシリアライザです。
+# - ログイン: email/password を検証して JWT を発行
+# - リフレッシュ: refresh_token から access_token を再発行
+# - me: ユーザー情報の返却用
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
@@ -10,6 +14,7 @@ class AuthLoginSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=8, write_only=True, style={"input_type": "password"})
 
     def validate(self, attrs):
+        # ここで「存在するユーザーか」「パスワードが合っているか」をチェックします。
         email = attrs["email"]
         password = attrs["password"]
 
@@ -19,6 +24,7 @@ class AuthLoginSerializer(serializers.Serializer):
         except (User.DoesNotExist, User.MultipleObjectsReturned):
             raise AuthenticationFailed("Invalid credentials.")
 
+        # Django 標準の認証バックエンドに委譲してパスワード検証を行います。
         authenticated_user = authenticate(
             request=self.context.get("request"),
             username=user.get_username(),
@@ -27,6 +33,7 @@ class AuthLoginSerializer(serializers.Serializer):
         if authenticated_user is None or not authenticated_user.is_active:
             raise AuthenticationFailed("Invalid credentials.")
 
+        # SimpleJWT の RefreshToken を発行し、そこから access_token を取り出します。
         refresh = RefreshToken.for_user(authenticated_user)
         access = refresh.access_token
         expires_in = int(access.lifetime.total_seconds())
@@ -43,6 +50,7 @@ class AuthRefreshSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
 
     def validate(self, attrs):
+        # refresh_token が有効かを検証し、access_token を作り直します。
         refresh_token = attrs["refresh_token"]
         try:
             refresh = RefreshToken(refresh_token)
@@ -68,5 +76,5 @@ class UserMeSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "first_name", "last_name", "created_at", "updated_at"]
 
     def get_updated_at(self, user):
+        # last_login があればそれを、なければ作成日時を返します。
         return user.last_login or user.date_joined
-
