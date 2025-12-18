@@ -35,10 +35,15 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
 
+    # ユーザー管理
+    'accounts',
+
     # 自作アプリ
     "condition",
 ]
 STATIC_URL = "static/"
+
+AUTH_USER_MODEL = "accounts.User"
 
 # 開発を簡単にするため SQLite を利用しています。
 DATABASES = {

@@ -18,13 +18,21 @@ import { Condition, fetchConditions, createCondition } from "./api";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { HistoryPage } from "./components/HistoryPage";
+import { RegisterPage } from "./components/RegisterPage";
 
 // このアプリで扱う画面（パス）を限定して型で表します。
-type Route = "/" | "/history";
+type Route = "/" | "/history" | "/register";
 
 // URL の pathname から「どの画面か」を判定します。
-const getCurrentPath = (): Route =>
-    window.location.pathname.startsWith("/history") ? "/history" : "/";
+const getCurrentPath = (): Route => {
+    if (window.location.pathname.startsWith("/history")) {
+        return "/history";
+    }
+    if (window.location.pathname.startsWith("/register")) {
+        return "/register";
+    }
+    return "/";
+};
 
 const App: React.FC = () => {
     // 取得したコンディション一覧（履歴ページ/一覧表示で利用）
@@ -59,6 +67,8 @@ const App: React.FC = () => {
             setCurrentPath(nextPath);
             if (nextPath === "/" && window.location.hash) {
                 setPendingHash(window.location.hash);
+            } else {
+                setPendingHash(null);
             }
         };
         window.addEventListener("popstate", handlePop);
@@ -107,6 +117,13 @@ const App: React.FC = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const navigateRegister = () => {
+        window.history.pushState({}, "", "/register");
+        setCurrentPath("/register");
+        setPendingHash(null);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
         <div className="app-shell">
             <CssBaseline />
@@ -114,11 +131,14 @@ const App: React.FC = () => {
                 onNavigateHome={() => navigateHome()}
                 onNavigateForm={() => navigateHome("#condition-input")}
                 onNavigateHistory={navigateHistory}
+                onNavigateRegister={navigateRegister}
                 currentPath={currentPath}
             />
 
             {currentPath === "/history" ? (
                 <HistoryPage conditions={conditions} loading={loading} />
+            ) : currentPath === "/register" ? (
+                <RegisterPage />
             ) : (
                 <>
                     {/* ヒーローセクション（トップの大きなエリア） */}

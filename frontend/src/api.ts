@@ -23,6 +23,24 @@ const apiClient = axios.create({
     baseURL: apiBaseUrl,
 });
 
+export type RegisteredUser = {
+    id: number;
+    account_id: string;
+    email: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    birth_date?: string | null;
+};
+
+export type UserRegistrationPayload = {
+    account_id: string;
+    email: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+    birth_date?: string;
+};
+
 export async function fetchConditions(): Promise<Condition[]> {
     // GET /conditions/ -> Condition[] を取得
     const res = await apiClient.get<Condition[]>("/conditions/");
@@ -32,4 +50,9 @@ export async function fetchConditions(): Promise<Condition[]> {
 export async function createCondition(data: Omit<Condition, "id" | "date">): Promise<void> {
     // POST /conditions/ -> 新しい Condition を作成（この実装ではレスポンスは使わない）
     await apiClient.post("/conditions/", data);
+}
+
+export async function registerUser(payload: UserRegistrationPayload): Promise<RegisteredUser> {
+    const res = await apiClient.post<RegisteredUser>("/auth/register", payload);
+    return res.data;
 }
