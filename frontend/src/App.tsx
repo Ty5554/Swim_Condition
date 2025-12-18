@@ -1,4 +1,7 @@
-
+// アプリ全体のルートコンポーネントです。
+// - 初回にコンディション一覧を取得（API から fetch）
+// - 「トップ(/)」「履歴(/history)」を History API で切り替え（簡易ルーティング）
+// - `#condition-input` へのアンカースクロールを、画面切替後に実行
 import React, { useEffect, useState } from "react";
 import {
     Box,
@@ -15,19 +18,34 @@ import { Condition, fetchConditions, createCondition } from "./api";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { HistoryPage } from "./components/HistoryPage";
+import { RegisterPage } from "./components/RegisterPage";
 
-type Route = "/" | "/history";
+// このアプリで扱う画面（パス）を限定して型で表します。
+type Route = "/" | "/history" | "/register";
 
-const getCurrentPath = (): Route =>
-    window.location.pathname.startsWith("/history") ? "/history" : "/";
+// URL の pathname から「どの画面か」を判定します。
+const getCurrentPath = (): Route => {
+    if (window.location.pathname.startsWith("/history")) {
+        return "/history";
+    }
+    if (window.location.pathname.startsWith("/register")) {
+        return "/register";
+    }
+    return "/";
+};
 
 const App: React.FC = () => {
+    // 取得したコンディション一覧（履歴ページ/一覧表示で利用）
     const [conditions, setConditions] = useState<Condition[]>([]);
+    // API 呼び出し中かどうか（ローディング表示の切り替えに利用）
     const [loading, setLoading] = useState(true);
+    // 現在の画面（/ または /history）
     const [currentPath, setCurrentPath] = useState<Route>(getCurrentPath());
+    // /#... のようなアンカーが付いている場合に、画面切替後にスクロールするための退避領域
     const [pendingHash, setPendingHash] = useState<string | null>(null);
 
     const load = async () => {
+        // 一覧を取得し直す共通関数（初回ロード・作成後の再読み込みで利用）
         setLoading(true);
         try {
             const data = await fetchConditions();
@@ -38,15 +56,19 @@ const App: React.FC = () => {
     };
 
     useEffect(() => {
+        // 初回マウント時に一覧を取得します。
         load();
     }, []);
 
     useEffect(() => {
+        // ブラウザの戻る/進む（popstate）に追従して画面状態を同期します。
         const handlePop = () => {
             const nextPath = getCurrentPath();
             setCurrentPath(nextPath);
             if (nextPath === "/" && window.location.hash) {
                 setPendingHash(window.location.hash);
+            } else {
+                setPendingHash(null);
             }
         };
         window.addEventListener("popstate", handlePop);
@@ -70,11 +92,13 @@ const App: React.FC = () => {
     }, [currentPath, pendingHash]);
 
     const handleCreate = async (data: Omit<Condition, "id" | "date">) => {
+        // 新規作成 → 一覧を再取得して UI を最新化します。
         await createCondition(data);
         await load();
     };
 
     const navigateHome = (hash?: string) => {
+        // / へ遷移（hash があれば /#... にし、フォーム位置へスクロールする準備をします）
         const nextUrl = hash ? `/${hash}` : "/";
         window.history.pushState({}, "", nextUrl);
         setCurrentPath("/");
@@ -86,8 +110,16 @@ const App: React.FC = () => {
     };
 
     const navigateHistory = () => {
+        // /history へ遷移（ページ上部へスクロール）
         window.history.pushState({}, "", "/history");
         setCurrentPath("/history");
+        setPendingHash(null);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const navigateRegister = () => {
+        window.history.pushState({}, "", "/register");
+        setCurrentPath("/register");
         setPendingHash(null);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -99,11 +131,14 @@ const App: React.FC = () => {
                 onNavigateHome={() => navigateHome()}
                 onNavigateForm={() => navigateHome("#condition-input")}
                 onNavigateHistory={navigateHistory}
+                onNavigateRegister={navigateRegister}
                 currentPath={currentPath}
             />
 
             {currentPath === "/history" ? (
                 <HistoryPage conditions={conditions} loading={loading} />
+            ) : currentPath === "/register" ? (
+                <RegisterPage />
             ) : (
                 <>
                     {/* ヒーローセクション（トップの大きなエリア） */}

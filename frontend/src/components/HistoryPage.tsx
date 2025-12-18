@@ -1,3 +1,5 @@
+// 履歴一覧ページです。
+// 親から渡された conditions と loading 状態に応じて、ローディング/空状態/テーブルを切り替えます。
 import React from "react";
 import { Box, Container, Paper, Typography } from "@mui/material";
 import type { Condition } from "../api";
@@ -9,6 +11,7 @@ type Props = {
 };
 
 export const HistoryPage: React.FC<Props> = ({ conditions, loading }) => {
+    // データがあるかどうかで空状態の表示を切り替えます。
     const hasData = conditions.length > 0;
 
     return (
@@ -39,8 +42,10 @@ export const HistoryPage: React.FC<Props> = ({ conditions, loading }) => {
                         </Typography>
                     </Paper>
                 ) : hasData ? (
+                    // データがあるときは一覧表示
                     <ConditionTable conditions={conditions} />
                 ) : (
+                    // データがないときは案内文を表示
                     <Paper sx={{ p: 3 }}>
                         <Typography variant="body2" color="text.secondary">
                             まだ記録がありません。トップページの入力フォームからコンディションを追加してください。

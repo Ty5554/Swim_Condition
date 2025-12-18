@@ -2,6 +2,8 @@
 @use "./_variables" as *;
 @use "./_mixins" as mixins;
 
+// アプリ全体に適用するグローバルスタイルです。
+// MUI のコンポーネントに加え、背景/ナビ/装飾のベースをここで定義します。
 :root {
     color: $ink;
     background-color: $surface;

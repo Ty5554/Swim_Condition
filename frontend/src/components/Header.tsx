@@ -1,3 +1,5 @@
+// 画面上部のナビゲーション（ヘッダー）です。
+// a タグのクリックを preventDefault して、親から渡されたコールバックで SPA 内遷移を実現しています。
 import React from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
 
@@ -5,18 +7,23 @@ type Props = {
     onNavigateHome: () => void;
     onNavigateForm: () => void;
     onNavigateHistory: () => void;
-    currentPath: "/" | "/history";
+    onNavigateRegister: () => void;
+    currentPath: "/" | "/history" | "/register";
 };
 
 export const Header: React.FC<Props> = ({
     onNavigateHome,
     onNavigateForm,
     onNavigateHistory,
+    onNavigateRegister,
     currentPath,
 }) => {
+    // 現在のパスに応じて「アクティブ表示」を切り替えます。
     const isHome = currentPath === "/";
     const isHistory = currentPath === "/history";
+    const isRegister = currentPath === "/register";
 
+    // MUI の Typography をリンクとして使うため、クリック時に通常遷移を止めてコールバックを呼びます。
     const handleClick =
         (callback: () => void) =>
         (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -64,6 +71,15 @@ export const Header: React.FC<Props> = ({
                         onClick={handleClick(onNavigateHistory)}
                     >
                         履歴一覧
+                    </Typography>
+                    <Typography
+                        component="a"
+                        href="/register"
+                        variant="body1"
+                        className={`nav-links__item ${isRegister ? "nav-links__item--active" : ""}`}
+                        onClick={handleClick(onNavigateRegister)}
+                    >
+                        ユーザー登録
                     </Typography>
                 </Box>
             </Toolbar>

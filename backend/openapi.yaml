@@ -1,3 +1,5 @@
+# 手書き（設計書ベース）で管理する OpenAPI 定義です。
+# Django 側では `backend/config/views.py` の `openapi_yaml_view` から `/api/schema.yaml` として配信します。
 openapi: 3.0.3
 info:
   title: Swim Condition API

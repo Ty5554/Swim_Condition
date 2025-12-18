@@ -1,3 +1,4 @@
+// 画面下部のフッターです（年号は実行時に自動で更新）。
 import React from "react";
 import { Box, Typography } from "@mui/material";
 
